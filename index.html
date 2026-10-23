@@ -1,0 +1,1763 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>VibeVio — Seu vídeo. Seu estúdio.</title>
+  <meta name="description" content="VibeVio é o estúdio de produção de vídeo de bolso alimentado por IA. Roteiro inteligente com Hook Score, teleprompter por voz e pós-produção automática.">
+  <meta property="og:title" content="VibeVio — Seu vídeo. Seu estúdio.">
+  <meta property="og:description" content="Estúdio de produção de vídeo de bolso com inteligência artificial para criadores de conteúdo.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <style>
+    /* =========================================================
+       1. FONTES GOOGLE
+       ========================================================= */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap');
+
+    /* =========================================================
+       2. VARIÁVEIS CSS OBRIGATÓRIAS NO :root
+       ========================================================= */
+    :root {
+      --color-primary: #00F5A0;
+      --color-bg: #0A0A0A;
+      --color-white: #FFFFFF;
+      --color-accent: #00AAFF;
+      --color-gray: #A0A0A0;
+      --color-card: #1A1A1A;
+      --color-border: #2A2A2A;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --font-title: 'Syne', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --transition: 0.3s ease;
+    }
+
+    /* Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: #050505;
+      color: var(--color-white);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Shell / Viewport Wrapper para 390x844px (iPhone 14) responsivo */
+    .app-viewport-wrapper {
+      width: 100%;
+      max-width: 412px;
+      height: 100vh;
+      max-height: 890px;
+      background: var(--color-bg);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(0, 245, 160, 0.08);
+      border: 1px solid var(--color-border);
+      border-radius: 36px;
+    }
+
+    @media (max-width: 500px) {
+      .app-viewport-wrapper {
+        max-width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        border: none;
+      }
+    }
+
+    /* Dynamic Island / Top Bezel */
+    .phone-notch-bar {
+      width: 100%;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-white);
+      z-index: 100;
+      flex-shrink: 0;
+      pointer-events: none;
+      background: transparent;
+    }
+
+    .island-pill {
+      width: 90px;
+      height: 20px;
+      background: #000000;
+      border-radius: 20px;
+      border: 1px solid #1f1f1f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .island-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #111;
+    }
+
+    .island-lens {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #0c1824;
+      border: 1px solid #16324d;
+    }
+
+    /* Screen Container & 300ms Transitions */
+    .screen-container {
+      flex: 1;
+      width: 100%;
+      position: relative;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: none;
+    }
+    .screen-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .screen-view {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: none;
+    }
+    .screen-view::-webkit-scrollbar {
+      display: none;
+    }
+
+    .screen-view.active {
+      opacity: 1;
+      pointer-events: auto;
+      z-index: 10;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav-bar {
+      width: 100%;
+      height: 64px;
+      background: rgba(20, 20, 20, 0.95);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid var(--color-border);
+      display: none;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 10px;
+      z-index: 90;
+      flex-shrink: 0;
+    }
+
+    .bottom-nav-bar.visible {
+      display: flex;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: var(--color-gray);
+      font-size: 10px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      transition: color var(--transition), transform 0.15s ease;
+      background: transparent;
+      border: none;
+    }
+    .nav-item:hover, .nav-item.active {
+      color: var(--color-primary);
+    }
+    .nav-item.active svg {
+      stroke: var(--color-primary);
+      filter: drop-shadow(0 0 6px rgba(0, 245, 160, 0.5));
+    }
+
+    /* Standard Utilities */
+    .font-title { font-family: var(--font-title); }
+    .font-body { font-family: var(--font-body); }
+    
+    .btn-primary {
+      background: var(--color-primary);
+      color: #000000;
+      font-family: var(--font-title);
+      font-weight: 700;
+      font-size: 14px;
+      padding: 14px 20px;
+      border-radius: var(--radius-lg);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all var(--transition);
+      box-shadow: 0 0 18px rgba(0, 245, 160, 0.35);
+      width: 100%;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 26px rgba(0, 245, 160, 0.55);
+    }
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background: var(--color-card);
+      color: var(--color-white);
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 13px;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all var(--transition);
+    }
+    .btn-secondary:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .badge-pill {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 9999px;
+      border: 1px solid var(--color-border);
+      background: rgba(26, 26, 26, 0.85);
+      color: var(--color-gray);
+    }
+
+    .badge-primary {
+      background: rgba(0, 245, 160, 0.15);
+      color: var(--color-primary);
+      border-color: rgba(0, 245, 160, 0.3);
+    }
+
+    .badge-accent {
+      background: rgba(0, 170, 255, 0.15);
+      color: var(--color-accent);
+      border-color: rgba(0, 170, 255, 0.3);
+    }
+
+    /* Ambient Glows */
+    .glow-sphere {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Teleprompter Cylinder Simulation */
+    .prompter-stage {
+      position: relative;
+      height: 220px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      perspective: 800px;
+      overflow: hidden;
+    }
+
+    .prompter-line {
+      width: 90%;
+      max-width: 320px;
+      text-align: center;
+      transition: all 0.35s cubic-bezier(0.2, 0.8, 0.25, 1);
+      word-wrap: break-word;
+      white-space: normal;
+      padding: 3px 0;
+    }
+
+    /* 5 Lines Formatting as specified:
+       Line 1: Gray
+       Line 2: Green
+       Line 3 (Center): Green with subtle illumination glow
+       Line 4: Green
+       Line 5: Gray
+    */
+    .prompter-l1 {
+      font-size: 12px;
+      color: var(--color-gray);
+      opacity: 0.45;
+      transform: translateY(-8px) scale(0.92) rotateX(25deg);
+    }
+    .prompter-l2 {
+      font-size: 14px;
+      color: var(--color-primary);
+      opacity: 0.8;
+      font-weight: 500;
+      transform: translateY(-4px) scale(0.96) rotateX(12deg);
+    }
+    .prompter-l3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-shadow: 0 0 16px rgba(0, 245, 160, 0.85), 0 0 4px #00F5A0;
+      transform: scale(1.05) translateZ(10px);
+      background: rgba(0, 245, 160, 0.08);
+      border-radius: 8px;
+      padding: 6px 10px;
+    }
+    .prompter-l4 {
+      font-size: 14px;
+      color: var(--color-primary);
+      opacity: 0.8;
+      font-weight: 500;
+      transform: translateY(4px) scale(0.96) rotateX(-12deg);
+    }
+    .prompter-l5 {
+      font-size: 12px;
+      color: var(--color-gray);
+      opacity: 0.45;
+      transform: translateY(8px) scale(0.92) rotateX(-25deg);
+    }
+
+    /* Camera / Horizontal Rotation support */
+    .rotatable-element {
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .is-landscape .rotatable-element {
+      transform: rotate(90deg);
+    }
+
+    /* Simple icon styles */
+    svg {
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-viewport-wrapper" id="app">
+    <!-- Top Mobile Header / Dynamic Island -->
+    <div class="phone-notch-bar">
+      <span id="statusBarTime">09:41</span>
+      <div class="island-pill">
+        <div class="island-lens"></div>
+        <div class="island-dot"></div>
+      </div>
+      <div style="display: flex; gap: 4px; align-items: center;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect><line x1="22" y1="11" x2="22" y2="13"></line></svg>
+      </div>
+    </div>
+
+    <!-- MAIN SCREENS CONTAINER -->
+    <div class="screen-container">
+
+      <!-- ==========================================
+           TELA 01: SPLASH SCREEN (2s auto-redirect)
+           ========================================== -->
+      <section id="screen-01" class="screen-view active" style="padding: 24px; justify-content: space-between; text-align: center;">
+        <div class="glow-sphere" style="top: 15%; left: -40px; width: 220px; height: 220px; background: rgba(0, 245, 160, 0.16);"></div>
+        <div class="glow-sphere" style="top: 25%; right: -40px; width: 240px; height: 240px; background: rgba(0, 170, 255, 0.15);"></div>
+
+        <div style="display: flex; justify-content: flex-end; padding-top: 6px;">
+          <span class="badge-pill">Estúdio de Bolso v1.0</span>
+        </div>
+
+        <div style="margin: auto 0; position: relative; z-index: 2;">
+          <div style="width: 86px; height: 86px; border-radius: 24px; background: var(--color-card); border: 1px solid var(--color-border); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 35px rgba(0, 245, 160, 0.35);">
+            <div style="width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); display: flex; align-items: center; justify-content: center;">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="#000" stroke="#000" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            </div>
+          </div>
+          <h1 class="font-title" style="font-size: 38px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px;">
+            Vibe<span style="color: var(--color-primary); text-shadow: 0 0 16px rgba(0,245,160,0.6);">Vio</span>
+          </h1>
+          <p class="font-title" style="font-size: 17px; color: rgba(255, 255, 255, 0.95); margin-bottom: 12px; font-weight: 600;">
+            Seu vídeo. Seu estúdio.
+          </p>
+          <p style="font-size: 13px; color: var(--color-gray); max-width: 270px; margin: 0 auto; line-height: 1.5;">
+            Crie vídeos magnéticos com IA, teleprompter inteligente e edição sem complicação.
+          </p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 16px; align-items: center; z-index: 2; padding-bottom: 12px;">
+          <div style="display: flex; gap: 6px;">
+            <div style="width: 22px; height: 6px; border-radius: 4px; background: var(--color-primary); box-shadow: 0 0 10px var(--color-primary);"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--color-border);"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--color-border);"></div>
+          </div>
+
+          <button class="btn-primary" onclick="goToScreen('02')">
+            Começar Agora
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+          <span style="font-size: 11px; color: var(--color-gray);">Redirecionando em 2 segundos...</span>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           TELA 02: ONBOARDING (3 Slides)
+           ========================================== -->
+      <section id="screen-02" class="screen-view" style="padding: 24px; justify-content: space-between;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="font-title" style="font-size: 12px; font-weight: 700; color: var(--color-gray); letter-spacing: 1px;">VIBEVIO ONBOARDING</span>
+          <button onclick="goToScreen('03')" style="background: none; border: none; color: var(--color-gray); font-size: 13px; cursor: pointer;">Pular</button>
+        </div>
+
+        <div id="onboardingSlideContent" style="text-align: center; margin: auto 0;">
+          <!-- Injected via JavaScript -->
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div id="onboardingDots" style="display: flex; justify-content: center; gap: 8px;">
+            <div class="slide-dot active" style="width: 24px; height: 6px; border-radius: 4px; background: var(--color-primary);"></div>
+            <div class="slide-dot" style="width: 6px; height: 6px; border-radius: 4px; background: var(--color-border);"></div>
+            <div class="slide-dot" style="width: 6px; height: 6px; border-radius: 4px; background: var(--color-border);"></div>
+          </div>
+
+          <button class="btn-primary" onclick="nextOnboardingSlide()">
+            <span id="onboardingBtnText">Continuar</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           TELA 03: LOGIN / CADASTRO
+           ========================================== -->
+      <section id="screen-03" class="screen-view" style="padding: 24px; justify-content: space-between;">
+        <div style="text-align: center; padding-top: 10px;">
+          <div style="width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(0,245,160,0.4);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#000" stroke="#000"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </div>
+          <h2 class="font-title" id="authTitle" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Entrar no VibeVio</h2>
+          <p style="font-size: 13px; color: var(--color-gray);">Seu estúdio de gravação de bolso te espera</p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px; margin: auto 0;">
+          <!-- Auth Tabs -->
+          <div style="display: flex; background: var(--color-card); padding: 4px; border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+            <button id="tabLogin" onclick="switchAuthMode('login')" style="flex: 1; padding: 8px; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; background: var(--color-border); color: #fff;">Entrar</button>
+            <button id="tabRegister" onclick="switchAuthMode('register')" style="flex: 1; padding: 8px; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; background: transparent; color: var(--color-gray);">Criar Conta</button>
+          </div>
+
+          <!-- Social Buttons -->
+          <button class="btn-secondary" onclick="loginSocial('Google')">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.6h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.9z"/><path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3 0-.8.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.3 0 15.1s.7 5.4 1.9 7.8l3.7-2.9z"/><path fill="#34A853" d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2-6.4-4.8L1.9 16.9C3.7 20.6 7.5 23.5 12 23.5z"/></svg>
+            Continuar com Google
+          </button>
+          <button class="btn-secondary" onclick="loginSocial('Apple')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.77 1.06-1.85.94-2.93-.93.04-2.02.63-2.67 1.4-.58.67-1.08 1.77-.94 2.83 1.03.08 2.05-.53 2.67-1.3"/></svg>
+            Continuar com Apple
+          </button>
+
+          <div style="display: flex; align-items: center; gap: 10px; margin: 4px 0;">
+            <div style="flex: 1; height: 1px; background: var(--color-border);"></div>
+            <span style="font-size: 11px; color: var(--color-gray);">OU COM E-MAIL</span>
+            <div style="flex: 1; height: 1px; background: var(--color-border);"></div>
+          </div>
+
+          <!-- Input Fields -->
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <input type="email" id="authEmail" placeholder="seu.email@exemplo.com" value="criador@vibevio.app" style="width: 100%; padding: 12px 14px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: #fff; font-size: 13px; outline: none;">
+            <input type="password" id="authPassword" placeholder="Sua senha secreta" value="••••••••" style="width: 100%; padding: 12px 14px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: #fff; font-size: 13px; outline: none;">
+          </div>
+
+          <button class="btn-primary" onclick="handleAuthSubmit()">
+            <span id="authSubmitText">Entrar no Estúdio</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+        </div>
+
+        <p style="font-size: 11px; color: var(--color-gray); text-align: center;">
+          Ao entrar você concorda com os Termos de Serviço e Política de Privacidade.
+        </p>
+      </section>
+
+      <!-- ==========================================
+           TELA 04: ONBOARDING ATIVO (3 Passos)
+           ========================================== -->
+      <section id="screen-04" class="screen-view" style="padding: 24px; justify-content: space-between;">
+        <div>
+          <!-- Stepper Indicator -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span class="badge-pill" id="activeStepBadge">PASSO 1 DE 3</span>
+            <span style="font-size: 12px; color: var(--color-primary); font-weight: 600;">Personalização</span>
+          </div>
+          <div style="width: 100%; height: 4px; background: var(--color-border); border-radius: 4px; overflow: hidden; margin-bottom: 20px;">
+            <div id="activeProgressBar" style="width: 33.3%; height: 100%; background: var(--color-primary); transition: width var(--transition);"></div>
+          </div>
+
+          <!-- Step 1 Content: Nome & Nicho -->
+          <div id="activeStep1">
+            <h2 class="font-title" style="font-size: 20px; font-weight: 700; margin-bottom: 6px;">Qual seu nicho criativo?</h2>
+            <p style="font-size: 13px; color: var(--color-gray); margin-bottom: 16px;">Personalizamos os roteiros e hook scores para o seu mercado.</p>
+
+            <label style="font-size: 11px; color: var(--color-gray); font-weight: 600; text-transform: uppercase;">Como quer ser chamado?</label>
+            <input type="text" id="activeCreatorName" value="Lucas Criador" placeholder="Seu nome ou canal" style="width: 100%; padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: #fff; font-size: 14px; margin: 6px 0 16px; outline: none;">
+
+            <label style="font-size: 11px; color: var(--color-gray); font-weight: 600; text-transform: uppercase;">Selecione seu nicho:</label>
+            <div style="display: grid; grid-cols-2; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;" id="nicheGrid">
+              <div class="niche-card active" onclick="selectNiche(this, 'Tecnologia & Criatividade')" style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-primary); border-radius: var(--radius-md); cursor: pointer; font-size: 12px; font-weight: 600; text-align: center; color: var(--color-primary);">Tecnologia</div>
+              <div class="niche-card" onclick="selectNiche(this, 'Educação & Cursos')" style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; font-size: 12px; font-weight: 600; text-align: center;">Educação</div>
+              <div class="niche-card" onclick="selectNiche(this, 'Finanças & Negócios')" style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; font-size: 12px; font-weight: 600; text-align: center;">Finanças</div>
+              <div class="niche-card" onclick="selectNiche(this, 'Saúde & Fitness')" style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; font-size: 12px; font-weight: 600; text-align: center;">Fitness</div>
+              <div class="niche-card" onclick="selectNiche(this, 'Lifestyle & Vlog')" style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; font-size: 12px; font-weight: 600; text-align: center;">Lifestyle</div>
+              <div class="niche-card" onclick="selectNiche(this, 'Humor & Entretenimento')" style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; font-size: 12px; font-weight: 600; text-align: center;">Humor</div>
+            </div>
+          </div>
+
+          <!-- Step 2 Content: Objetivo -->
+          <div id="activeStep2" style="display: none;">
+            <h2 class="font-title" style="font-size: 20px; font-weight: 700; margin-bottom: 6px;">Qual seu foco nos vídeos?</h2>
+            <p style="font-size: 13px; color: var(--color-gray); margin-bottom: 16px;">Otimizaremos ganchos de retenção para sua meta.</p>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div class="goal-card active" onclick="selectGoal(this)" style="padding: 14px; background: var(--color-card); border: 1px solid var(--color-primary); border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  <div style="font-size: 14px; font-weight: 700; color: #fff;">Viralizar e Ganhar Seguidores</div>
+                  <div style="font-size: 11px; color: var(--color-gray);">Foco em ganchos magnéticos nos 3 primeiros segundos</div>
+                </div>
+                <div style="width: 18px; height: 18px; border-radius: 50%; background: var(--color-primary); display: flex; align-items: center; justify-content: center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+              </div>
+              <div class="goal-card" onclick="selectGoal(this)" style="padding: 14px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  <div style="font-size: 14px; font-weight: 700; color: #fff;">Vender Produtos ou Serviços</div>
+                  <div style="font-size: 11px; color: var(--color-gray);">Roteiros persuasivos com CTA de alta conversão</div>
+                </div>
+                <div style="width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--color-border);"></div>
+              </div>
+              <div class="goal-card" onclick="selectGoal(this)" style="padding: 14px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  <div style="font-size: 14px; font-weight: 700; color: #fff;">Construir Autoridade no Nicho</div>
+                  <div style="font-size: 11px; color: var(--color-gray);">Conteúdo denso com clareza profissional</div>
+                </div>
+                <div style="width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--color-border);"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3 Content: Tom de Voz -->
+          <div id="activeStep3" style="display: none;">
+            <h2 class="font-title" style="font-size: 20px; font-weight: 700; margin-bottom: 6px;">Qual seu estilo de gravação?</h2>
+            <p style="font-size: 13px; color: var(--color-gray); margin-bottom: 16px;">Define o ritmo do teleprompter e as legendas.</p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div class="tone-card active" onclick="selectTone(this, 'Descontraído')" style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-primary); border-radius: var(--radius-md); cursor: pointer;">
+                <div style="font-size: 13px; font-weight: 700; color: var(--color-primary); margin-bottom: 4px;">Descontraído</div>
+                <div style="font-size: 11px; color: var(--color-gray);">Conversa natural, como um café entre amigos.</div>
+              </div>
+              <div class="tone-card" onclick="selectTone(this, 'Profissional')" style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer;">
+                <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px;">Profissional</div>
+                <div style="font-size: 11px; color: var(--color-gray);">Claro, seguro, direto e com forte autoridade.</div>
+              </div>
+              <div class="tone-card" onclick="selectTone(this, 'Inspirador')" style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer;">
+                <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px;">Inspirador</div>
+                <div style="font-size: 11px; color: var(--color-gray);">Motivacional, focado em visão e transformação.</div>
+              </div>
+              <div class="tone-card" onclick="selectTone(this, 'Dinâmico')" style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer;">
+                <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px;">Dinâmico</div>
+                <div style="font-size: 11px; color: var(--color-gray);">Rápido, enérgico, perfeito para Reels e TikTok.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button id="btnPrevActive" class="btn-secondary" onclick="prevActiveStep()" style="display: none; width: 44px; padding: 0; justify-content: center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <button class="btn-primary" onclick="nextActiveStep()" style="flex: 1;">
+            <span id="activeNextBtnText">Continuar</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           TELA 05: HOME / DASHBOARD
+           ========================================== -->
+      <section id="screen-05" class="screen-view" style="padding: 18px;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+          <div>
+            <span style="font-size: 11px; color: var(--color-gray); text-transform: uppercase; font-weight: 600;">Estúdio Criativo</span>
+            <h2 class="font-title" id="homeGreeting" style="font-size: 20px; font-weight: 700; color: #fff;">Olá, Lucas 👋</h2>
+          </div>
+          <div onclick="goToScreen('10')" style="width: 40px; height: 40px; border-radius: 50%; padding: 2px; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); cursor: pointer;">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+          </div>
+        </div>
+
+        <!-- 2 Main Action Cards -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+          <div onclick="goToScreen('06')" style="padding: 16px; background: linear-gradient(145deg, #1f1f1f, #141414); border: 1px solid var(--color-border); border-radius: var(--radius-lg); cursor: pointer; transition: all var(--transition); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+            <div style="width: 38px; height: 38px; border-radius: 12px; background: var(--color-primary); color: #000; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; box-shadow: 0 0 15px rgba(0,245,160,0.5);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </div>
+            <div class="font-title" style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 2px;">Novo Roteiro</div>
+            <div style="font-size: 11px; color: var(--color-gray);">Com IA & Hook Score</div>
+          </div>
+
+          <div onclick="goToScreen('07')" style="padding: 16px; background: linear-gradient(145deg, #1f1f1f, #141414); border: 1px solid var(--color-border); border-radius: var(--radius-lg); cursor: pointer; transition: all var(--transition); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+            <div style="width: 38px; height: 38px; border-radius: 12px; background: var(--color-accent); color: #000; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; box-shadow: 0 0 15px rgba(0,170,255,0.5);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            </div>
+            <div class="font-title" style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 2px;">Gravar Agora</div>
+            <div style="font-size: 11px; color: var(--color-gray);">Teleprompter 5 linhas</div>
+          </div>
+        </div>
+
+        <!-- Hook Score Insight Banner -->
+        <div style="padding: 14px; background: rgba(0, 245, 160, 0.08); border: 1px solid rgba(0, 245, 160, 0.25); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 36px; height: 36px; border-radius: 10px; background: var(--color-primary); color: #000; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px;">88</div>
+            <div>
+              <div style="font-size: 12px; font-weight: 700; color: #fff;">Hook Score Médio</div>
+              <div style="font-size: 11px; color: var(--color-primary);">Top 5% de retenção na primeira cena</div>
+            </div>
+          </div>
+          <button onclick="goToScreen('06')" style="background: none; border: none; color: var(--color-primary); font-size: 12px; font-weight: 700; cursor: pointer;">Criar →</button>
+        </div>
+
+        <!-- Recent Projects Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 class="font-title" style="font-size: 15px; font-weight: 700; color: #fff;">Projetos Recentes</h3>
+          <span style="font-size: 11px; color: var(--color-gray);">3 vídeos</span>
+        </div>
+
+        <!-- Projects List -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div onclick="goToScreen('07')" style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 44px; height: 44px; border-radius: 10px; background: #262626; display: flex; align-items: center; justify-content: center; color: var(--color-primary);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 8-6 4 6 4V8Z"></path><rect width="14" height="12" x="2" y="6" rx="2"></rect></svg>
+              </div>
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: #fff;">3 Segredos da Retenção</div>
+                <div style="font-size: 11px; color: var(--color-gray);">Hook Score 92/100 • 58s</div>
+              </div>
+            </div>
+            <span class="badge-pill badge-primary">Gravado</span>
+          </div>
+
+          <div onclick="goToScreen('08')" style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 44px; height: 44px; border-radius: 10px; background: #262626; display: flex; align-items: center; justify-content: center; color: var(--color-accent);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg>
+              </div>
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: #fff;">Como Dobrar Engajamento</div>
+                <div style="font-size: 11px; color: var(--color-gray);">Legendas Neon • 1m 12s</div>
+              </div>
+            </div>
+            <span class="badge-pill badge-accent">Pós-Produção</span>
+          </div>
+
+          <div onclick="goToScreen('06')" style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 44px; height: 44px; border-radius: 10px; background: #262626; display: flex; align-items: center; justify-content: center; color: var(--color-gray);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+              </div>
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: #fff;">Ideia: Ferramentas de IA</div>
+                <div style="font-size: 11px; color: var(--color-gray);">Rascunho criado hoje</div>
+              </div>
+            </div>
+            <span class="badge-pill">Roteiro</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           TELA 06: ROTEIRO + HOOK SCORE
+           ========================================== -->
+      <section id="screen-06" class="screen-view" style="padding: 18px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button onclick="goToScreen('05')" style="background: none; border: none; color: var(--color-gray); cursor: pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+            <h2 class="font-title" style="font-size: 18px; font-weight: 700;">Roteiro com IA</h2>
+          </div>
+          <button onclick="generateAIScriptDemo()" style="padding: 6px 12px; background: rgba(0, 245, 160, 0.15); border: 1px solid rgba(0, 245, 160, 0.4); border-radius: 20px; color: var(--color-primary); font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            Gerar com IA
+          </button>
+        </div>
+
+        <!-- Hook Score Meter Box -->
+        <div style="padding: 14px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 12px; font-weight: 700; color: #fff;">Hook Score dos primeiros 3s</span>
+            <span id="hookScoreValue" style="font-size: 18px; font-weight: 800; color: var(--color-primary); text-shadow: 0 0 10px var(--color-primary);">92/100</span>
+          </div>
+          <div style="width: 100%; height: 8px; background: #262626; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
+            <div id="hookScoreBar" style="width: 92%; height: 100%; background: linear-gradient(90deg, #ffbb00, var(--color-primary)); transition: width 0.4s ease;"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--color-gray);">
+            <span>Fraco (&lt;50)</span>
+            <span>Bom (70+)</span>
+            <span style="color: var(--color-primary); font-weight: 700;">Magnético (90+)</span>
+          </div>
+        </div>
+
+        <!-- Textarea do Roteiro -->
+        <label style="font-size: 11px; color: var(--color-gray); font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block;">Texto do Roteiro (com quebras para pausas):</label>
+        <textarea id="scriptInput" oninput="updateHookScoreOnInput()" rows="7" style="width: 100%; padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: #fff; font-size: 13px; line-height: 1.6; resize: none; outline: none; margin-bottom: 12px;">Pare de cometer esse erro grave ao gravar vídeos com seu celular!
+
+Se você começa o vídeo falando "Oi pessoal, tudo bem?", você perde 80% do público.
+
+O segredo é abrir direto na dor mais forte nos 3 primeiros segundos.
+
+Ajuste seu olhar para a lente e deixe o teleprompter te conduzir.
+
+Salve esse vídeo agora para não esquecer!</textarea>
+
+        <!-- Voice preview toggle -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <button onclick="toggleVoiceAudio()" class="btn-secondary" style="padding: 8px 12px; font-size: 11px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            <span id="voiceBtnLabel">Ouvir Simulação de Voz</span>
+          </button>
+          <span style="font-size: 11px; color: var(--color-gray);" id="scriptWordCount">54 palavras • ~28s</span>
+        </div>
+
+        <button class="btn-primary" onclick="proceedToTeleprompter()">
+          Ir para Gravação com Teleprompter
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+      </section>
+
+      <!-- ==========================================
+           TELA 07: GRAVAÇÃO COM TELEPROMPTER
+           ========================================== -->
+      <section id="screen-07" class="screen-view" style="padding: 0; background: #000; position: relative;">
+        <!-- Camera View / Backdrop Simulation -->
+        <div style="position: absolute; inset: 0; background: radial-gradient(circle at center, #1b2838 0%, #080c12 70%, #000000 100%); overflow: hidden;">
+          <video id="liveCameraVideo" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; opacity: 0.85; display: none;"></video>
+          <div id="simulatedFace" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; opacity: 0.35;">
+            <div style="width: 140px; height: 180px; border: 2px dashed rgba(0, 245, 160, 0.4); border-radius: 70px; display: flex; align-items: center; justify-content: center;">
+              <span style="font-size: 11px; color: var(--color-primary); font-weight: 600;">Posicione o rosto</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOP BAR: Cenário, Alerta Olhe para a Lente e Timer (sem ultrapassar a borda!) -->
+        <div style="position: absolute; top: 10px; left: 10px; right: 10px; display: flex; align-items: center; justify-content: space-between; z-index: 40; gap: 6px;">
+          <!-- Seletor de Cenário -->
+          <div class="rotatable-element">
+            <select id="bgSelector" onchange="changeBackgroundMode(this.value)" style="background: rgba(20,20,20,0.85); color: #fff; border: 1px solid var(--color-border); border-radius: 20px; font-size: 11px; font-weight: 600; padding: 5px 8px; outline: none; backdrop-filter: blur(8px);">
+              <option value="studio">Estúdio Tech</option>
+              <option value="blur">Fundo Desfocado</option>
+              <option value="neon">Neon Cyber</option>
+            </select>
+          </div>
+
+          <!-- Alerta "Olhe para a Lente" -->
+          <div class="rotatable-element" style="padding: 4px 10px; background: rgba(0, 245, 160, 0.15); border: 1px solid rgba(0, 245, 160, 0.5); border-radius: 20px; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(8px);">
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 6px var(--color-primary);"></div>
+            <span style="font-size: 10px; font-weight: 700; color: var(--color-primary); text-transform: uppercase;">Olhe para a Lente</span>
+          </div>
+
+          <!-- Timer de Gravação -->
+          <div class="rotatable-element" style="padding: 4px 10px; background: rgba(20,20,20,0.85); border: 1px solid var(--color-border); border-radius: 20px; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(8px);">
+            <div id="recIndicatorDot" style="width: 7px; height: 7px; border-radius: 50%; background: #ff3b30;"></div>
+            <span id="prompterTimer" style="font-size: 11px; font-weight: 700; color: #fff; font-family: monospace;">00:00</span>
+          </div>
+        </div>
+
+        <!-- 5-LINE CYLINDRICAL TELEPROMPTER OVERLAY -->
+        <div style="position: absolute; top: 70px; left: 0; right: 0; z-index: 30; pointer-events: none;">
+          <div class="prompter-stage">
+            <div id="pLine1" class="prompter-line prompter-l1">-</div>
+            <div id="pLine2" class="prompter-line prompter-l2">-</div>
+            <div id="pLine3" class="prompter-line prompter-l3">-</div>
+            <div id="pLine4" class="prompter-line prompter-l4">-</div>
+            <div id="pLine5" class="prompter-line prompter-l5">-</div>
+          </div>
+        </div>
+
+        <!-- SPEED & ORIENTATION CONTROLS (acima da barra inferior) -->
+        <div style="position: absolute; bottom: 84px; left: 14px; right: 14px; display: flex; justify-content: space-between; align-items: center; z-index: 40;">
+          <!-- Speed Combobox Selector -->
+          <div class="rotatable-element" style="display: flex; align-items: center; gap: 6px; background: rgba(20,20,20,0.85); border: 1px solid var(--color-border); border-radius: 20px; padding: 4px 10px; backdrop-filter: blur(8px);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <select id="wpmSelector" onchange="changePrompterSpeed(this.value)" style="background: transparent; color: #fff; border: none; font-size: 11px; font-weight: 700; outline: none; cursor: pointer;">
+              <option value="100">100 PPM (Calmo)</option>
+              <option value="130" selected>130 PPM (Normal)</option>
+              <option value="160">160 PPM (Rápido)</option>
+              <option value="190">190 PPM (Dinâmico)</option>
+            </select>
+          </div>
+
+          <!-- Orientation Toggle (Gira os botões e elementos mantendo a posição dos controles!) -->
+          <button class="rotatable-element" onclick="toggleRecordingOrientation()" style="background: rgba(20,20,20,0.85); border: 1px solid var(--color-border); border-radius: 20px; padding: 5px 10px; color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 5px; cursor: pointer; backdrop-filter: blur(8px);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><path d="M12 18h.01"></path></svg>
+            <span id="orientationLabel">9:16</span>
+          </button>
+        </div>
+
+        <!-- BOTTOM RECORDING CONTROLS BAR -->
+        <div style="position: absolute; bottom: 12px; left: 12px; right: 12px; height: 62px; background: rgba(18,18,18,0.92); border: 1px solid var(--color-border); border-radius: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 50; backdrop-filter: blur(12px);">
+          <!-- Câmera e Microfone com ativação e seleção -->
+          <div style="display: flex; gap: 8px;">
+            <button class="rotatable-element" id="btnCamToggle" onclick="toggleCameraDevice()" style="width: 36px; height: 36px; border-radius: 50%; background: #262626; border: 1px solid var(--color-border); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 8-6 4 6 4V8Z"></path><rect width="14" height="12" x="2" y="6" rx="2"></rect></svg>
+            </button>
+            <button class="rotatable-element" id="btnMicToggle" onclick="toggleMicDevice()" style="width: 36px; height: 36px; border-radius: 50%; background: #262626; border: 1px solid var(--color-border); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+            </button>
+          </div>
+
+          <!-- Central Big Record Button -->
+          <button id="btnRecordAction" onclick="toggleRecording()" style="width: 52px; height: 52px; border-radius: 50%; background: #ff3b30; border: 4px solid #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s ease; box-shadow: 0 0 20px rgba(255, 59, 48, 0.6);">
+            <div id="recInnerShape" style="width: 18px; height: 18px; border-radius: 50%; background: #fff;"></div>
+          </button>
+
+          <!-- Done / Go to Screen 08 Button -->
+          <button class="rotatable-element" onclick="goToScreen('08')" style="padding: 8px 14px; border-radius: 20px; background: var(--color-primary); color: #000; font-size: 11px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+            Avançar
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           TELA 08: PÓS-PRODUÇÃO
+           ========================================== -->
+      <section id="screen-08" class="screen-view" style="padding: 18px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button onclick="goToScreen('07')" style="background: none; border: none; color: var(--color-gray); cursor: pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+            <h2 class="font-title" style="font-size: 18px; font-weight: 700;">Pós-Produção IA</h2>
+          </div>
+          <span class="badge-pill badge-primary">Auto Edição</span>
+        </div>
+
+        <!-- Video Preview Box -->
+        <div style="width: 100%; height: 210px; background: #141414; border: 1px solid var(--color-border); border-radius: var(--radius-lg); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; margin-bottom: 14px;">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.6;">
+          
+          <!-- Sample Subtitle Overlay -->
+          <div id="captionPreviewBox" style="position: absolute; bottom: 24px; padding: 4px 12px; background: #000; border-radius: 6px; font-weight: 900; font-size: 16px; color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 0 12px var(--color-primary);">
+            RETENÇÃO MÁXIMA
+          </div>
+
+          <div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); padding: 3px 8px; border-radius: 12px; font-size: 10px; color: #fff;">00:28</div>
+        </div>
+
+        <!-- Caption Style Selector -->
+        <label style="font-size: 11px; color: var(--color-gray); font-weight: 600; text-transform: uppercase; margin-bottom: 8px; display: block;">Estilo das Legendas Automáticas:</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;">
+          <div class="caption-style-card active" onclick="selectCaptionStyle('hormozi', this)" style="padding: 10px; background: var(--color-card); border: 1px solid var(--color-primary); border-radius: var(--radius-md); cursor: pointer; text-align: center;">
+            <div style="font-size: 12px; font-weight: 800; color: var(--color-primary); margin-bottom: 2px;">Hormozi Neon</div>
+            <div style="font-size: 10px; color: var(--color-gray);">Verde neon de impacto</div>
+          </div>
+          <div class="caption-style-card" onclick="selectCaptionStyle('clean', this)" style="padding: 10px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; text-align: center;">
+            <div style="font-size: 12px; font-weight: 800; color: #fff; margin-bottom: 2px;">Minimal Clean</div>
+            <div style="font-size: 10px; color: var(--color-gray);">Branco com sombra suave</div>
+          </div>
+          <div class="caption-style-card" onclick="selectCaptionStyle('yellow', this)" style="padding: 10px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; text-align: center;">
+            <div style="font-size: 12px; font-weight: 800; color: #ffdd00; margin-bottom: 2px;">Caixa Amarela</div>
+            <div style="font-size: 10px; color: var(--color-gray);">Máxima legibilidade</div>
+          </div>
+          <div class="caption-style-card" onclick="selectCaptionStyle('cyan', this)" style="padding: 10px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; text-align: center;">
+            <div style="font-size: 12px; font-weight: 800; color: var(--color-accent); margin-bottom: 2px;">Ciano Glow</div>
+            <div style="font-size: 10px; color: var(--color-gray);">Estilo moderno futurista</div>
+          </div>
+        </div>
+
+        <!-- AI Enhancements Toggles -->
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+              <div>
+                <div style="font-size: 13px; font-weight: 600; color: #fff;">Limpeza de Áudio com IA</div>
+                <div style="font-size: 10px; color: var(--color-gray);">Remove ruídos e equaliza a voz</div>
+              </div>
+            </div>
+            <input type="checkbox" checked style="accent-color: var(--color-primary); width: 16px; height: 16px;">
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line></svg>
+              <div>
+                <div style="font-size: 13px; font-weight: 600; color: #fff;">Corte Automático de Pausas</div>
+                <div style="font-size: 10px; color: var(--color-gray);">Elimina respiros e silêncios mortos</div>
+              </div>
+            </div>
+            <input type="checkbox" checked style="accent-color: var(--color-primary); width: 16px; height: 16px;">
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="goToScreen('09')">
+          Avançar para Exportação
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+      </section>
+
+      <!-- ==========================================
+           TELA 09: EXPORTAÇÃO / PAYWALL
+           ========================================== -->
+      <section id="screen-09" class="screen-view" style="padding: 18px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button onclick="goToScreen('08')" style="background: none; border: none; color: var(--color-gray); cursor: pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+            <h2 class="font-title" style="font-size: 18px; font-weight: 700;">Exportar Vídeo</h2>
+          </div>
+          <span class="badge-pill badge-primary">Qualidade Máxima</span>
+        </div>
+
+        <!-- 3 Plan Cards (Avulso R$ 4,90 selecionado por padrão) -->
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+          <!-- Plano Grátis -->
+          <div class="paywall-plan-card" onclick="selectExportPlan('free', this)" style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 13px; font-weight: 700; color: #fff;">Plano Básico</div>
+              <div style="font-size: 11px; color: var(--color-gray);">Resolução 720p com marca d’água discreta</div>
+            </div>
+            <div style="font-size: 14px; font-weight: 800; color: #fff;">Grátis</div>
+          </div>
+
+          <!-- Plano Avulso (Destaque) -->
+          <div class="paywall-plan-card active" onclick="selectExportPlan('single', this)" style="padding: 14px; background: linear-gradient(145deg, #1f2a24, #121815); border: 1.5px solid var(--color-primary); border-radius: var(--radius-md); cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 0 15px rgba(0,245,160,0.15);">
+            <div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 14px; font-weight: 800; color: #fff;">Avulso Full HD</span>
+                <span class="badge-pill badge-primary">Mais Escolhido</span>
+              </div>
+              <div style="font-size: 11px; color: var(--color-gray);">1080p sem marca d’água • Pronto para postar</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--color-primary);">R$ 4,90</div>
+              <div style="font-size: 10px; color: var(--color-gray);">por vídeo</div>
+            </div>
+          </div>
+
+          <!-- Plano Pro -->
+          <div class="paywall-plan-card" onclick="selectExportPlan('pro', this)" style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 13px; font-weight: 700; color: #fff;">VibeVio Pro Ilimitado</span>
+                <span class="badge-pill badge-accent">VIP</span>
+              </div>
+              <div style="font-size: 11px; color: var(--color-gray);">Vídeos 4K ilimitados + IA de roteiro avançada</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 15px; font-weight: 800; color: var(--color-accent);">R$ 29,90</div>
+              <div style="font-size: 10px; color: var(--color-gray);">por mês</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export Progress Bar (Hidden during idle) -->
+        <div id="exportProgressContainer" style="display: none; padding: 16px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; margin-bottom: 6px;">
+            <span id="exportStatusText">Renderizando legendas e áudio...</span>
+            <span id="exportProgressPercent" style="color: var(--color-primary);">45%</span>
+          </div>
+          <div style="width: 100%; height: 6px; background: #262626; border-radius: 3px; overflow: hidden;">
+            <div id="exportProgressBar" style="width: 45%; height: 100%; background: var(--color-primary); transition: width 0.2s ease;"></div>
+          </div>
+        </div>
+
+        <!-- Export Success Notification (Hidden initially) -->
+        <div id="exportSuccessCard" style="display: none; padding: 14px; background: rgba(0,245,160,0.1); border: 1px solid var(--color-primary); border-radius: var(--radius-md); text-align: center; margin-bottom: 16px;">
+          <div style="width: 38px; height: 38px; border-radius: 50%; background: var(--color-primary); color: #000; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 2px;">Vídeo Exportado com Sucesso!</div>
+          <div style="font-size: 11px; color: var(--color-gray);">Pronto para publicar no Instagram Reels, TikTok e Shorts</div>
+        </div>
+
+        <button id="btnExportTrigger" class="btn-primary" onclick="simulateExportAction()" style="margin-bottom: 10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Exportar Agora (1080p)
+        </button>
+
+        <button class="btn-secondary" onclick="goToScreen('10')" style="width: 100%;">
+          Ver Meu Perfil Criador
+        </button>
+      </section>
+
+      <!-- ==========================================
+           TELA 10: PERFIL DO USUÁRIO
+           ========================================== -->
+      <section id="screen-10" class="screen-view" style="padding: 18px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <h2 class="font-title" style="font-size: 18px; font-weight: 700;">Perfil Criador</h2>
+          <span class="badge-pill badge-primary">Membro VIP</span>
+        </div>
+
+        <!-- Profile Avatar & Details -->
+        <div style="padding: 14px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); display: flex; align-items: center; gap: 14px; margin-bottom: 14px;">
+          <div style="width: 60px; height: 60px; border-radius: 50%; padding: 2px; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); flex-shrink: 0;">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+          </div>
+          <div>
+            <h3 class="font-title" id="profileNameDisplay" style="font-size: 16px; font-weight: 700; color: #fff;">Lucas Criador</h3>
+            <p style="font-size: 12px; color: var(--color-gray);" id="profileEmailDisplay">lucas@vibevio.app</p>
+            <div style="display: flex; gap: 6px; margin-top: 6px;">
+              <span class="badge-pill badge-primary">Criador Pro</span>
+              <span class="badge-pill badge-accent" id="profileNicheBadge">Tecnologia</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Creator Stats -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;">
+          <div style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+            <span style="font-size: 10px; color: var(--color-gray); text-transform: uppercase;">Vídeos Criados</span>
+            <div class="font-title" style="font-size: 18px; font-weight: 800; color: #fff; margin-top: 2px;">24</div>
+            <span style="font-size: 10px; color: var(--color-primary);">+6 este mês</span>
+          </div>
+
+          <div style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+            <span style="font-size: 10px; color: var(--color-gray); text-transform: uppercase;">Minutos Gravados</span>
+            <div class="font-title" style="font-size: 18px; font-weight: 800; color: #fff; margin-top: 2px;">148m</div>
+            <span style="font-size: 10px; color: var(--color-accent);">Tempo total</span>
+          </div>
+
+          <div style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+            <span style="font-size: 10px; color: var(--color-gray); text-transform: uppercase;">Hook Score Médio</span>
+            <div class="font-title" style="font-size: 18px; font-weight: 800; color: var(--color-primary); margin-top: 2px;">88/100</div>
+            <span style="font-size: 10px; color: var(--color-gray);">Alta retenção</span>
+          </div>
+
+          <div style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+            <span style="font-size: 10px; color: var(--color-gray); text-transform: uppercase;">Retenção Média</span>
+            <div class="font-title" style="font-size: 18px; font-weight: 800; color: #fff; margin-top: 2px;">+42%</div>
+            <span style="font-size: 10px; color: var(--color-primary);">vs média padrão</span>
+          </div>
+        </div>
+
+        <!-- Storage Bar -->
+        <div style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
+            <span style="color: var(--color-gray);">Armazenamento em Nuvem</span>
+            <span style="color: #fff; font-weight: 600;">3.2 GB de 15 GB</span>
+          </div>
+          <div style="width: 100%; height: 5px; background: #262626; border-radius: 3px; overflow: hidden;">
+            <div style="width: 22%; height: 100%; background: var(--color-primary);"></div>
+          </div>
+        </div>
+
+        <!-- Settings List -->
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;">
+          <div onclick="goToScreen('06')" style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+            <span style="font-size: 12px; color: #fff;">Configurações de Roteiro e IA</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-gray)" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+          <div onclick="goToScreen('09')" style="padding: 12px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+            <span style="font-size: 12px; color: #fff;">Assinatura & Faturamento</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-gray)" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </div>
+
+        <button class="btn-secondary" onclick="goToScreen('01')" style="width: 100%; color: #ff3b30; border-color: rgba(255,59,48,0.3);">
+          Sair do Estúdio
+        </button>
+      </section>
+
+    </div>
+
+    <!-- ==========================================
+         BARRA DE NAVEGAÇÃO INFERIOR (Telas 05 a 10)
+         4 Tabs: Início, Projetos, Cortes, Perfil
+         ========================================== -->
+    <nav id="bottomNav" class="bottom-nav-bar">
+      <button class="nav-item active" id="navTabHome" onclick="goToScreen('05')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <span>Início</span>
+      </button>
+
+      <button class="nav-item" id="navTabProjects" onclick="goToScreen('06')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <span>Roteiro</span>
+      </button>
+
+      <button class="nav-item" id="navTabCuts" onclick="goToScreen('08')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg>
+        <span>Cortes</span>
+      </button>
+
+      <button class="nav-item" id="navTabProfile" onclick="goToScreen('10')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <span>Perfil</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- =========================================================
+       3. JAVASCRIPT INLINE — LÓGICA E NAVEGAÇÃO COMPLETA
+       ========================================================= -->
+  <script>
+    // App State
+    const state = {
+      currentScreen: '01',
+      user: {
+        name: 'Lucas Criador',
+        email: 'criador@vibevio.app',
+        niche: 'Tecnologia & Criatividade',
+        goal: 'Viralizar e Ganhar Seguidores',
+        tone: 'Descontraído'
+      },
+      onboardingSlide: 0,
+      activeStep: 1,
+      isRecording: false,
+      recordingSeconds: 0,
+      timerInterval: null,
+      prompterInterval: null,
+      currentScriptLines: [],
+      prompterLineIndex: 0,
+      prompterWpm: 130,
+      isLandscape: false,
+      selectedPlan: 'single',
+      selectedCaptionStyle: 'hormozi',
+      cameraActive: true,
+      micActive: true
+    };
+
+    // Onboarding Slides Data
+    const onboardingSlides = [
+      {
+        title: 'Roteiro com Hook Score',
+        subtitle: 'Sua ideia bruta transformada em gancho que prende nos 3 primeiros segundos.',
+        badge: 'Hook Score até 100',
+        icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>'
+      },
+      {
+        title: 'Teleprompter Inteligente',
+        subtitle: 'O texto rola suavemente no ritmo dos seus olhos com formatação em 5 linhas.',
+        badge: 'Rolagem Cilíndrica',
+        icon: '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line>'
+      },
+      {
+        title: 'Pós-Produção no Piloto',
+        subtitle: 'Áudio limpo sem ruídos, legendas magnéticas e cortes de pausas num só toque.',
+        badge: 'Pronto para Postar',
+        icon: '<circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line>'
+      }
+    ];
+
+    // Clock update in status bar
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const el = document.getElementById('statusBarTime');
+      if (el) el.innerText = `${hours}:${minutes}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // ==========================================
+    // NAVEGAÇÃO PRINCIPAL ENTRE TELAS
+    // ==========================================
+    function goToScreen(screenNumber) {
+      // Formata ID com zero à esquerda se necessário
+      const screenId = String(screenNumber).padStart(2, '0');
+      state.currentScreen = screenId;
+
+      // Desativa todas as telas
+      document.querySelectorAll('.screen-view').forEach(view => {
+        view.classList.remove('active');
+      });
+
+      // Ativa tela solicitada
+      const targetScreen = document.getElementById(`screen-${screenId}`);
+      if (targetScreen) {
+        targetScreen.classList.add('active');
+        targetScreen.scrollTop = 0;
+      }
+
+      // Controla a visibilidade da barra inferior (apenas telas 05 a 10)
+      const bottomNav = document.getElementById('bottomNav');
+      const screenNum = parseInt(screenId, 10);
+      if (screenNum >= 5 && screenNum <= 10) {
+        bottomNav.classList.add('visible');
+        updateBottomNavTabs(screenId);
+      } else {
+        bottomNav.classList.remove('visible');
+      }
+
+      // Parar gravação se sair da tela 07
+      if (screenId !== '07' && state.isRecording) {
+        stopRecording();
+      }
+
+      // Se entrou na tela 07, inicia câmera se disponível
+      if (screenId === '07') {
+        initCameraPreview();
+        prepareTeleprompter();
+      }
+    }
+
+    function updateBottomNavTabs(screenId) {
+      document.querySelectorAll('.nav-item').forEach(tab => tab.classList.remove('active'));
+      if (screenId === '05') document.getElementById('navTabHome')?.classList.add('active');
+      else if (screenId === '06') document.getElementById('navTabProjects')?.classList.add('active');
+      else if (screenId === '08') document.getElementById('navTabCuts')?.classList.add('active');
+      else if (screenId === '10') document.getElementById('navTabProfile')?.classList.add('active');
+    }
+
+    // ==========================================
+    // TELA 01: SPLASH SCREEN (2s auto redirect)
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', () => {
+      // Inicia Onboarding slide 0
+      renderOnboardingSlide(0);
+
+      // Auto-redirecionamento após 2000ms
+      setTimeout(() => {
+        if (state.currentScreen === '01') {
+          goToScreen('02');
+        }
+      }, 2000);
+    });
+
+    // ==========================================
+    // TELA 02: ONBOARDING LOGIC
+    // ==========================================
+    function renderOnboardingSlide(index) {
+      state.onboardingSlide = index;
+      const slide = onboardingSlides[index];
+      const container = document.getElementById('onboardingSlideContent');
+      if (!container) return;
+
+      container.innerHTML = `
+        <div style="width: 80px; height: 80px; border-radius: 24px; background: var(--color-card); border: 1px solid var(--color-border); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(0, 245, 160, 0.25);">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2">
+            ${slide.icon}
+          </svg>
+        </div>
+        <span class="badge-pill badge-primary" style="margin-bottom: 12px; display: inline-block;">${slide.badge}</span>
+        <h2 class="font-title" style="font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 8px;">${slide.title}</h2>
+        <p style="font-size: 14px; color: var(--color-gray); max-width: 280px; margin: 0 auto; line-height: 1.5;">${slide.subtitle}</p>
+      `;
+
+      // Atualiza dots
+      const dotsContainer = document.getElementById('onboardingDots');
+      if (dotsContainer) {
+        dotsContainer.innerHTML = onboardingSlides.map((_, i) => `
+          <div style="width: ${i === index ? '24px' : '6px'}; height: 6px; border-radius: 4px; background: ${i === index ? 'var(--color-primary)' : 'var(--color-border)'}; transition: all 0.3s ease;"></div>
+        `).join('');
+      }
+
+      const btnText = document.getElementById('onboardingBtnText');
+      if (btnText) {
+        btnText.innerText = index === onboardingSlides.length - 1 ? 'Criar Minha Conta' : 'Continuar';
+      }
+    }
+
+    function nextOnboardingSlide() {
+      if (state.onboardingSlide < onboardingSlides.length - 1) {
+        renderOnboardingSlide(state.onboardingSlide + 1);
+      } else {
+        goToScreen('03');
+      }
+    }
+
+    // ==========================================
+    // TELA 03: AUTHENTICATION
+    // ==========================================
+    function switchAuthMode(mode) {
+      const tabLogin = document.getElementById('tabLogin');
+      const tabRegister = document.getElementById('tabRegister');
+      const title = document.getElementById('authTitle');
+      const submitBtn = document.getElementById('authSubmitText');
+
+      if (mode === 'login') {
+        tabLogin.style.background = 'var(--color-border)';
+        tabLogin.style.color = '#fff';
+        tabRegister.style.background = 'transparent';
+        tabRegister.style.color = 'var(--color-gray)';
+        title.innerText = 'Entrar no VibeVio';
+        submitBtn.innerText = 'Entrar no Estúdio';
+      } else {
+        tabRegister.style.background = 'var(--color-border)';
+        tabRegister.style.color = '#fff';
+        tabLogin.style.background = 'transparent';
+        tabLogin.style.color = 'var(--color-gray)';
+        title.innerText = 'Criar sua Conta';
+        submitBtn.innerText = 'Criar Conta Grátis';
+      }
+    }
+
+    function loginSocial(provider) {
+      state.user.name = `Criador ${provider}`;
+      state.user.email = `criador.${provider.toLowerCase()}@exemplo.com`;
+      syncUserUI();
+      goToScreen('04');
+    }
+
+    function handleAuthSubmit() {
+      const emailInput = document.getElementById('authEmail');
+      if (emailInput && emailInput.value) {
+        state.user.email = emailInput.value;
+      }
+      syncUserUI();
+      goToScreen('04');
+    }
+
+    function syncUserUI() {
+      const homeGreeting = document.getElementById('homeGreeting');
+      if (homeGreeting) homeGreeting.innerText = `Olá, ${state.user.name.split(' ')[0]} 👋`;
+      const profileName = document.getElementById('profileNameDisplay');
+      if (profileName) profileName.innerText = state.user.name;
+      const profileEmail = document.getElementById('profileEmailDisplay');
+      if (profileEmail) profileEmail.innerText = state.user.email;
+      const profileNiche = document.getElementById('profileNicheBadge');
+      if (profileNiche) profileNiche.innerText = state.user.niche;
+    }
+
+    // ==========================================
+    // TELA 04: ONBOARDING ATIVO (3 PASSOS)
+    // ==========================================
+    function selectNiche(el, nicheName) {
+      document.querySelectorAll('.niche-card').forEach(c => {
+        c.style.borderColor = 'var(--color-border)';
+        c.style.color = '#fff';
+      });
+      el.style.borderColor = 'var(--color-primary)';
+      el.style.color = 'var(--color-primary)';
+      state.user.niche = nicheName;
+      syncUserUI();
+    }
+
+    function selectGoal(el) {
+      document.querySelectorAll('.goal-card').forEach(c => {
+        c.style.borderColor = 'var(--color-border)';
+        const check = c.querySelector('div:last-child');
+        if (check) check.innerHTML = '';
+      });
+      el.style.borderColor = 'var(--color-primary)';
+      const check = el.querySelector('div:last-child');
+      if (check) {
+        check.style.background = 'var(--color-primary)';
+        check.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+      }
+    }
+
+    function selectTone(el, toneName) {
+      document.querySelectorAll('.tone-card').forEach(c => {
+        c.style.borderColor = 'var(--color-border)';
+      });
+      el.style.borderColor = 'var(--color-primary)';
+      state.user.tone = toneName;
+    }
+
+    function nextActiveStep() {
+      if (state.activeStep === 1) {
+        const nameInput = document.getElementById('activeCreatorName');
+        if (nameInput && nameInput.value.trim()) {
+          state.user.name = nameInput.value.trim();
+          syncUserUI();
+        }
+        state.activeStep = 2;
+        updateActiveStepUI();
+      } else if (state.activeStep === 2) {
+        state.activeStep = 3;
+        updateActiveStepUI();
+      } else {
+        goToScreen('05');
+      }
+    }
+
+    function prevActiveStep() {
+      if (state.activeStep > 1) {
+        state.activeStep--;
+        updateActiveStepUI();
+      }
+    }
+
+    function updateActiveStepUI() {
+      document.getElementById('activeStepBadge').innerText = `PASSO ${state.activeStep} DE 3`;
+      document.getElementById('activeProgressBar').style.width = `${state.activeStep * 33.3}%`;
+
+      document.getElementById('activeStep1').style.display = state.activeStep === 1 ? 'block' : 'none';
+      document.getElementById('activeStep2').style.display = state.activeStep === 2 ? 'block' : 'none';
+      document.getElementById('activeStep3').style.display = state.activeStep === 3 ? 'block' : 'none';
+
+      document.getElementById('btnPrevActive').style.display = state.activeStep > 1 ? 'flex' : 'none';
+      document.getElementById('activeNextBtnText').innerText = state.activeStep === 3 ? 'Entrar no Estúdio' : 'Continuar';
+    }
+
+    // ==========================================
+    // TELA 06: ROTEIRO & HOOK SCORE
+    // ==========================================
+    function calculateHookScore(text) {
+      if (!text || text.trim().length === 0) return 0;
+      let score = 50;
+      const lower = text.toLowerCase();
+      // Power words
+      if (lower.includes('segredo') || lower.includes('erro') || lower.includes('pare') || lower.includes('nunca')) score += 20;
+      if (lower.includes('como') || lower.includes('truque') || lower.includes('descobri')) score += 12;
+      if (text.includes('?')) score += 10;
+      if (text.includes('!')) score += 8;
+      return Math.min(score, 98);
+    }
+
+    function updateHookScoreOnInput() {
+      const textarea = document.getElementById('scriptInput');
+      if (!textarea) return;
+      const text = textarea.value;
+      const score = calculateHookScore(text);
+      const scoreValue = document.getElementById('hookScoreValue');
+      const scoreBar = document.getElementById('hookScoreBar');
+      if (scoreValue) scoreValue.innerText = `${score}/100`;
+      if (scoreBar) scoreBar.style.width = `${score}%`;
+
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      const seconds = Math.round(words / 2.3);
+      const wordCountEl = document.getElementById('scriptWordCount');
+      if (wordCountEl) wordCountEl.innerText = `${words} palavras • ~${seconds}s`;
+    }
+
+    function generateAIScriptDemo() {
+      const textarea = document.getElementById('scriptInput');
+      if (textarea) {
+        textarea.value = `O maior erro dos criadores de conteúdo ao gravar vídeos:
+
+Eles passam 10 segundos enrolando e agradecendo a audiência.
+
+O cérebro moderno decide ficar ou sair nos primeiros 3 segundos!
+
+Comece direto com a revelação que o seu público mais deseja.
+
+Gostou do hack? Inscreva-se e teste seu vídeo com o VibeVio!`;
+        updateHookScoreOnInput();
+      }
+    }
+
+    let synthPlaying = false;
+    function toggleVoiceAudio() {
+      if (!('speechSynthesis' in window)) {
+        alert('Síntese de voz não disponível neste navegador.');
+        return;
+      }
+      const label = document.getElementById('voiceBtnLabel');
+      if (synthPlaying) {
+        window.speechSynthesis.cancel();
+        synthPlaying = false;
+        if (label) label.innerText = 'Ouvir Simulação de Voz';
+      } else {
+        const text = document.getElementById('scriptInput')?.value || 'Texto de teste';
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'pt-BR';
+        utter.onend = () => {
+          synthPlaying = false;
+          if (label) label.innerText = 'Ouvir Simulação de Voz';
+        };
+        window.speechSynthesis.speak(utter);
+        synthPlaying = true;
+        if (label) label.innerText = 'Pausar Simulação';
+      }
+    }
+
+    function proceedToTeleprompter() {
+      goToScreen('07');
+    }
+
+    // ==========================================
+    // TELA 07: GRAVAÇÃO E TELEPROMPTER DE 5 LINHAS
+    // ==========================================
+    function prepareTeleprompter() {
+      const scriptText = document.getElementById('scriptInput')?.value || '';
+      // Quebra por linhas (respeita vazias substituindo por '-')
+      const rawLines = scriptText.split('\n');
+      state.currentScriptLines = rawLines.map(line => {
+        const trimmed = line.trim();
+        return trimmed.length === 0 ? '-' : trimmed;
+      });
+
+      state.prompterLineIndex = 0;
+      renderPrompterLines();
+    }
+
+    function renderPrompterLines() {
+      const lines = state.currentScriptLines;
+      const idx = state.prompterLineIndex;
+
+      // 5 Linhas:
+      // Linha 1 (passada - cinza)
+      // Linha 2 (preparação - verde)
+      // Linha 3 (CENTRAL com glow suave - foco ativo)
+      // Linha 4 (próxima - verde)
+      // Linha 5 (futura - cinza)
+      const l1 = idx > 1 ? lines[idx - 2] : (idx === 1 ? lines[0] : '-');
+      const l2 = idx > 0 ? lines[idx - 1] : '-';
+      const l3 = idx < lines.length ? lines[idx] : '-';
+      const l4 = idx + 1 < lines.length ? lines[idx + 1] : '-';
+      const l5 = idx + 2 < lines.length ? lines[idx + 2] : '-';
+
+      const el1 = document.getElementById('pLine1');
+      const el2 = document.getElementById('pLine2');
+      const el3 = document.getElementById('pLine3');
+      const el4 = document.getElementById('pLine4');
+      const el5 = document.getElementById('pLine5');
+
+      if (el1) el1.innerText = l1;
+      if (el2) el2.innerText = l2;
+      if (el3) el3.innerText = l3;
+      if (el4) el4.innerText = l4;
+      if (el5) el5.innerText = l5;
+    }
+
+    function toggleRecording() {
+      if (state.isRecording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    }
+
+    function startRecording() {
+      state.isRecording = true;
+      state.recordingSeconds = 0;
+      const recBtn = document.getElementById('btnRecordAction');
+      const recShape = document.getElementById('recInnerShape');
+      if (recBtn) recBtn.style.transform = 'scale(1.08)';
+      if (recShape) {
+        recShape.style.borderRadius = '4px';
+        recShape.style.width = '14px';
+        recShape.style.height = '14px';
+        recShape.style.background = '#fff';
+      }
+
+      // Intervalo do timer
+      clearInterval(state.timerInterval);
+      state.timerInterval = setInterval(() => {
+        state.recordingSeconds++;
+        const mins = String(Math.floor(state.recordingSeconds / 60)).padStart(2, '0');
+        const secs = String(state.recordingSeconds % 60).padStart(2, '0');
+        const timerEl = document.getElementById('prompterTimer');
+        if (timerEl) timerEl.innerText = `${mins}:${secs}`;
+      }, 1000);
+
+      // Rolagem suave do cilindro baseada na velocidade WPM
+      // WPM selecionado pelo usuário no combobox
+      const msPerLine = Math.round((60 / (state.prompterWpm / 6)) * 1000); // Média de ~6 palavras por linha
+      clearInterval(state.prompterInterval);
+      state.prompterInterval = setInterval(() => {
+        if (state.prompterLineIndex < state.currentScriptLines.length - 1) {
+          state.prompterLineIndex++;
+          renderPrompterLines();
+        } else {
+          // Chegou ao fim do roteiro
+          stopRecording();
+        }
+      }, Math.max(msPerLine, 1800));
+    }
+
+    function stopRecording() {
+      state.isRecording = false;
+      clearInterval(state.timerInterval);
+      clearInterval(state.prompterInterval);
+
+      const recBtn = document.getElementById('btnRecordAction');
+      const recShape = document.getElementById('recInnerShape');
+      if (recBtn) recBtn.style.transform = 'scale(1)';
+      if (recShape) {
+        recShape.style.borderRadius = '50%';
+        recShape.style.width = '18px';
+        recShape.style.height = '18px';
+      }
+    }
+
+    function changePrompterSpeed(speedVal) {
+      state.prompterWpm = parseInt(speedVal, 10);
+      if (state.isRecording) {
+        // Reinicia com novo ritmo
+        clearInterval(state.prompterInterval);
+        const msPerLine = Math.round((60 / (state.prompterWpm / 6)) * 1000);
+        state.prompterInterval = setInterval(() => {
+          if (state.prompterLineIndex < state.currentScriptLines.length - 1) {
+            state.prompterLineIndex++;
+            renderPrompterLines();
+          }
+        }, Math.max(msPerLine, 1800));
+      }
+    }
+
+    function toggleRecordingOrientation() {
+      state.isLandscape = !state.isLandscape;
+      const app = document.getElementById('app');
+      const label = document.getElementById('orientationLabel');
+      if (state.isLandscape) {
+        app.classList.add('is-landscape');
+        if (label) label.innerText = '16:9';
+      } else {
+        app.classList.remove('is-landscape');
+        if (label) label.innerText = '9:16';
+      }
+    }
+
+    function changeBackgroundMode(mode) {
+      const face = document.getElementById('simulatedFace');
+      if (face) {
+        if (mode === 'blur') face.style.filter = 'blur(4px)';
+        else if (mode === 'neon') face.style.filter = 'drop-shadow(0 0 10px #00F5A0)';
+        else face.style.filter = 'none';
+      }
+    }
+
+    function toggleCameraDevice() {
+      state.cameraActive = !state.cameraActive;
+      const btn = document.getElementById('btnCamToggle');
+      const video = document.getElementById('liveCameraVideo');
+      if (btn) btn.style.color = state.cameraActive ? '#fff' : '#ff3b30';
+      if (video) video.style.display = state.cameraActive ? 'block' : 'none';
+    }
+
+    function toggleMicDevice() {
+      state.micActive = !state.micActive;
+      const btn = document.getElementById('btnMicToggle');
+      if (btn) btn.style.color = state.micActive ? '#fff' : '#ff3b30';
+    }
+
+    async function initCameraPreview() {
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          const video = document.getElementById('liveCameraVideo');
+          if (video) {
+            video.srcObject = stream;
+            video.style.display = 'block';
+          }
+        }
+      } catch (err) {
+        // Câmera real bloqueada ou sem suporte: utiliza backdrop estilizado automaticamente
+        console.log('Utilizando backdrop simulado de estúdio');
+      }
+    }
+
+    // ==========================================
+    // TELA 08: PÓS-PRODUÇÃO
+    // ==========================================
+    function selectCaptionStyle(style, el) {
+      state.selectedCaptionStyle = style;
+      document.querySelectorAll('.caption-style-card').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+
+      const preview = document.getElementById('captionPreviewBox');
+      if (!preview) return;
+
+      if (style === 'hormozi') {
+        preview.style.background = '#000';
+        preview.style.color = 'var(--color-primary)';
+        preview.style.boxShadow = '0 0 12px var(--color-primary)';
+        preview.innerText = 'RETENÇÃO MÁXIMA';
+      } else if (style === 'clean') {
+        preview.style.background = 'transparent';
+        preview.style.color = '#fff';
+        preview.style.boxShadow = 'none';
+        preview.innerText = 'foco natural';
+      } else if (style === 'yellow') {
+        preview.style.background = '#ffdd00';
+        preview.style.color = '#000';
+        preview.style.boxShadow = 'none';
+        preview.innerText = 'TRANSFORMAÇÃO';
+      } else if (style === 'cyan') {
+        preview.style.background = '#000';
+        preview.style.color = 'var(--color-accent)';
+        preview.style.boxShadow = '0 0 12px var(--color-accent)';
+        preview.innerText = 'RESULTADOS PRO';
+      }
+    }
+
+    // ==========================================
+    // TELA 09: EXPORTAÇÃO / PAYWALL
+    // ==========================================
+    function selectExportPlan(plan, el) {
+      state.selectedPlan = plan;
+      document.querySelectorAll('.paywall-plan-card').forEach(c => {
+        c.classList.remove('active');
+        c.style.borderColor = 'var(--color-border)';
+      });
+      el.classList.add('active');
+      el.style.borderColor = plan === 'pro' ? 'var(--color-accent)' : 'var(--color-primary)';
+
+      const triggerBtn = document.getElementById('btnExportTrigger');
+      if (triggerBtn) {
+        if (plan === 'free') triggerBtn.innerText = 'Exportar Grátis (720p)';
+        else if (plan === 'single') triggerBtn.innerText = 'Exportar Agora — R$ 4,90 (1080p)';
+        else triggerBtn.innerText = 'Assinar Pro — R$ 29,90/mês (4K VIP)';
+      }
+    }
+
+    function simulateExportAction() {
+      const progressContainer = document.getElementById('exportProgressContainer');
+      const progressBar = document.getElementById('exportProgressBar');
+      const progressPercent = document.getElementById('exportProgressPercent');
+      const successCard = document.getElementById('exportSuccessCard');
+      const triggerBtn = document.getElementById('btnExportTrigger');
+
+      if (progressContainer) progressContainer.style.display = 'block';
+      if (successCard) successCard.style.display = 'none';
+      if (triggerBtn) triggerBtn.disabled = true;
+
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 20;
+        if (progressBar) progressBar.style.width = `${progress}%`;
+        if (progressPercent) progressPercent.innerText = `${progress}%`;
+
+        if (progress >= 100) {
+          clearInterval(interval);
+          if (progressContainer) progressContainer.style.display = 'none';
+          if (successCard) successCard.style.display = 'block';
+          if (triggerBtn) {
+            triggerBtn.disabled = false;
+            triggerBtn.innerText = 'Baixar Vídeo Finalizado (.MP4)';
+            triggerBtn.onclick = () => {
+              alert('Download iniciado! Seu vídeo Full HD foi gerado com sucesso.');
+              goToScreen('05');
+            };
+          }
+        }
+      }, 300);
+    }
+  </script>
+</body>
+</html>
