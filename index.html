@@ -848,32 +848,23 @@ Salve esse vídeo agora para não esquecer!</textarea>
           </div>
         </div>
 
-        <!-- TOP BAR: Cenário, Alerta Olhe para a Lente e Timer (sem ultrapassar a borda!) -->
-        <div style="position: absolute; top: 10px; left: 10px; right: 10px; display: flex; align-items: center; justify-content: space-between; z-index: 40; gap: 6px;">
-          <!-- Seletor de Cenário -->
-          <div class="rotatable-element">
-            <select id="bgSelector" onchange="changeBackgroundMode(this.value)" style="background: rgba(20,20,20,0.85); color: #fff; border: 1px solid var(--color-border); border-radius: 20px; font-size: 11px; font-weight: 600; padding: 5px 8px; outline: none; backdrop-filter: blur(8px);">
-              <option value="studio">Estúdio Tech</option>
-              <option value="blur">Fundo Desfocado</option>
-              <option value="neon">Neon Cyber</option>
-            </select>
-          </div>
-
-          <!-- Alerta "Olhe para a Lente" -->
-          <div class="rotatable-element" style="padding: 4px 10px; background: rgba(0, 245, 160, 0.15); border: 1px solid rgba(0, 245, 160, 0.5); border-radius: 20px; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(8px);">
+        <!-- TOP BAR: Alerta Olhe para a Lente no canto esquerdo e Cronômetro no canto direito -->
+        <div style="position: absolute; top: 8px; left: 10px; right: 10px; display: flex; align-items: center; justify-content: space-between; z-index: 40; gap: 6px;">
+          <!-- Canto Esquerdo: Alerta "Olhe para a Lente" em fundo cinza -->
+          <div class="rotatable-element" style="padding: 5px 12px; background: rgba(20, 20, 20, 0.85); border: 1px solid var(--color-border); border-radius: 20px; display: flex; align-items: center; gap: 6px; backdrop-filter: blur(8px);">
             <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 6px var(--color-primary);"></div>
-            <span style="font-size: 10px; font-weight: 700; color: var(--color-primary); text-transform: uppercase;">Olhe para a Lente</span>
+            <span style="font-size: 10px; font-weight: 700; color: var(--color-primary); font-family: var(--font-title); text-transform: uppercase;">Olhe para a Lente</span>
           </div>
 
-          <!-- Timer de Gravação -->
-          <div class="rotatable-element" style="padding: 4px 10px; background: rgba(20,20,20,0.85); border: 1px solid var(--color-border); border-radius: 20px; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(8px);">
+          <!-- Canto Direito: Cronômetro / Timer de Gravação -->
+          <div class="rotatable-element" style="padding: 5px 12px; background: rgba(20, 20, 20, 0.85); border: 1px solid var(--color-border); border-radius: 20px; display: flex; align-items: center; gap: 6px; backdrop-filter: blur(8px);">
             <div id="recIndicatorDot" style="width: 7px; height: 7px; border-radius: 50%; background: #ff3b30;"></div>
             <span id="prompterTimer" style="font-size: 11px; font-weight: 700; color: #fff; font-family: monospace;">00:00</span>
           </div>
         </div>
 
-        <!-- 5-LINE CYLINDRICAL TELEPROMPTER OVERLAY (gira junto com os demais controles!) -->
-        <div style="position: absolute; top: 70px; left: 0; right: 0; z-index: 30; pointer-events: none;">
+        <!-- 5-LINE CYLINDRICAL TELEPROMPTER OVERLAY (Posicionado no limite superior da tela) -->
+        <div style="position: absolute; top: 36px; left: 0; right: 0; z-index: 30; pointer-events: none;">
           <div class="prompter-stage rotatable-element" id="prompterStage">
             <div id="pLine1" class="prompter-line prompter-l1">-</div>
             <div id="pLine2" class="prompter-line prompter-l2">-</div>
@@ -936,9 +927,74 @@ Salve esse vídeo agora para não esquecer!</textarea>
             <div style="width: 170px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden;">
               <div id="playbackProgressBar" style="width: 0%; height: 100%; background: var(--color-primary); box-shadow: 0 0 8px var(--color-primary); transition: width 0.15s linear;"></div>
             </div>
+            <button onclick="restartRecording()" style="margin-top: 4px; padding: 6px 14px; border-radius: 20px; background: rgba(20,20,20,0.85); border: 1px solid var(--color-primary); color: var(--color-primary); font-family: var(--font-title); font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 4px 14px rgba(0,0,0,0.5);" title="Descartar este take e gravar novamente">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+              Gravar Novamente
+            </button>
+          </div>
+        </div>
+        <!-- OVERLAY: AGUARDE, CARREGANDO O VÍDEO... -->
+        <div id="videoLoadingOverlayHtml" style="display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); z-index: 55; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;">
+          <div class="rotatable-element" style="display: flex; flex-direction: column; align-items: center;">
+            <div style="width: 52px; height: 52px; border: 4px solid rgba(0,245,160,0.2); border-top-color: var(--color-primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 14px;"></div>
+            <h3 style="font-family: var(--font-title); font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              Aguarde, carregando o vídeo...
+            </h3>
+            <p style="font-size: 12px; color: var(--color-gray); max-width: 240px; line-height: 1.4; margin-bottom: 10px;">
+              Carregando o último take gravado para exibição.
+            </p>
+            <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; background: rgba(26,26,26,0.9); border: 1px solid var(--color-border); font-size: 10px; font-family: monospace; color: var(--color-primary);">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--color-primary);"></span>
+              Sincronizando áudio e vídeo do take
+            </div>
           </div>
         </div>
 
+        <!-- REPRODUTOR DE VÍDEO GRAVADO (VÍDEO REAL SEM SINTETIZADOR) -->
+        <div id="videoPlayerContainerHtml" style="display: none; position: absolute; inset: 0; background: #000; z-index: 50; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;">
+          <video id="htmlRecordedVideo" playsinline style="width: 100%; height: 100%; object-fit: cover;" onclick="toggleHtmlVideoPlayPause()"></video>
+
+          <!-- Barra superior do player -->
+          <div style="position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: center; z-index: 10;">
+            <div style="background: rgba(0,0,0,0.85); border: 1px solid rgba(0,245,160,0.4); border-radius: 20px; padding: 4px 10px; color: var(--color-primary); font-size: 11px; font-weight: 700; font-family: var(--font-title); display: flex; align-items: center; gap: 6px;">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--color-primary);"></span>
+              Último Vídeo Gravado
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button onclick="restartRecording()" style="background: rgba(0,0,0,0.85); border: 1px solid rgba(0,245,160,0.5); border-radius: 20px; padding: 4px 12px; color: var(--color-primary); font-size: 11px; font-weight: 700; font-family: var(--font-title); cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                Gravar Novamente
+              </button>
+              <button onclick="closeHtmlVideoPlayer()" style="background: rgba(0,0,0,0.85); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 4px 12px; color: #fff; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                Voltar à Câmera
+              </button>
+            </div>
+          </div>
+
+          <!-- Botão Play central se o vídeo estiver pausado -->
+          <button id="btnHtmlVideoCenterPlay" onclick="toggleHtmlVideoPlayPause()" style="display: none; position: absolute; width: 68px; height: 68px; border-radius: 50%; background: var(--color-primary); border: none; color: #000; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 0 35px var(--color-primary); z-index: 10;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style="margin-left: 2px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          </button>
+
+          <!-- Barra de controles inferior -->
+          <div style="position: absolute; bottom: 12px; left: 10px; right: 10px; background: rgba(0,0,0,0.85); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 10px; backdrop-filter: blur(8px); display: flex; flex-direction: column; gap: 8px; z-index: 10;">
+            <div id="htmlVideoProgressBarTrack" onclick="seekHtmlVideo(event)" style="width: 100%; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; cursor: pointer; overflow: hidden;">
+              <div id="htmlVideoProgressBarFill" style="width: 0%; height: 100%; background: var(--color-primary); transition: width 0.1s linear;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-family: monospace; font-size: 11px; color: rgba(255,255,255,0.9);">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <button onclick="toggleHtmlVideoPlayPause()" style="background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 24px; height: 24px; color: var(--color-primary); cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                  <svg id="htmlVideoPlayBtnIcon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  <svg id="htmlVideoPauseBtnIcon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="display: none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                </button>
+                <span id="htmlVideoTimeText">00:00 / 00:15</span>
+              </div>
+              <span id="htmlVideoStatusBadge" style="color: var(--color-primary); font-weight: 700; text-transform: uppercase; font-size: 10px;">REPRODUZINDO</span>
+            </div>
+          </div>
+        </div>
         <!-- 5-SECOND COUNTDOWN PREPARATION OVERLAY -->
         <div id="recordingCountdownModal" style="display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 95; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;">
           <div class="rotatable-element" style="display: flex; flex-direction: column; align-items: center;">
@@ -1966,10 +2022,8 @@ Gostou do hack? Inscreva-se e teste seu vídeo com o VibeVio!`;
       alert('Roteiro salvo com sucesso no histórico!');
     }
 
-    // Playback do Take Gravado na Tela 07
-    let playbackInterval = null;
-    let isPlaybackPlaying = false;
-    let playbackProgress = 0;
+    // Playback do Take Gravado na Tela 07 (Vídeo Real)
+    let recordedVideoBlobUrl = null;
 
     function showPlaybackCenterOverlay(show) {
       const overlay = document.getElementById('playbackCenterOverlay');
@@ -1979,67 +2033,95 @@ Gostou do hack? Inscreva-se e teste seu vídeo com o VibeVio!`;
     }
 
     function togglePlaybackRecordedTake() {
-      if (isPlaybackPlaying) {
-        stopPlaybackRecordedTake();
+      const loadingOverlay = document.getElementById('videoLoadingOverlayHtml');
+      const playerContainer = document.getElementById('videoPlayerContainerHtml');
+      const videoEl = document.getElementById('htmlRecordedVideo');
+
+      if (!loadingOverlay || !playerContainer || !videoEl) return;
+
+      // Exibe o elemento "Aguarde, carregando o vídeo..." imediatamente
+      loadingOverlay.style.display = 'flex';
+
+      setTimeout(() => {
+        loadingOverlay.style.display = 'none';
+        playerContainer.style.display = 'flex';
+
+        if (!videoEl.src) {
+          videoEl.src = recordedVideoBlobUrl || 'https://assets.mixkit.co/videos/preview/mixkit-young-woman-talking-on-a-video-call-with-her-phone-42880-large.mp4';
+        }
+
+        videoEl.play().catch(() => {});
+        updateHtmlVideoState(true);
+      }, 1100);
+    }
+
+    function toggleHtmlVideoPlayPause() {
+      const videoEl = document.getElementById('htmlRecordedVideo');
+      if (!videoEl) return;
+      if (videoEl.paused) {
+        videoEl.play();
+        updateHtmlVideoState(true);
       } else {
-        startPlaybackRecordedTake();
+        videoEl.pause();
+        updateHtmlVideoState(false);
       }
     }
 
-    function startPlaybackRecordedTake() {
-      isPlaybackPlaying = true;
-      const playIcon = document.getElementById('playbackPlayIcon');
-      const pauseIcon = document.getElementById('playbackPauseIcon');
-      const statusText = document.getElementById('playbackStatusText');
-      if (playIcon) playIcon.style.display = 'none';
-      if (pauseIcon) pauseIcon.style.display = 'block';
-      if (statusText) statusText.innerHTML = '<span style="width: 6px; height: 6px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 6px var(--color-primary);"></span> Reproduzindo Take';
+    function updateHtmlVideoState(isPlaying) {
+      const centerPlayBtn = document.getElementById('btnHtmlVideoCenterPlay');
+      const playIcon = document.getElementById('htmlVideoPlayBtnIcon');
+      const pauseIcon = document.getElementById('htmlVideoPauseBtnIcon');
+      const badge = document.getElementById('htmlVideoStatusBadge');
 
-      // Sintetizador tocando o áudio demo gravado
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-        const snippet = document.getElementById('scriptInput')?.value || 'Take gravado com sucesso no teleprompter VibeVio.';
-        const utter = new SpeechSynthesisUtterance(snippet);
-        utter.lang = 'pt-BR';
-        utter.rate = 1.05;
-        window.speechSynthesis.speak(utter);
-      }
+      if (centerPlayBtn) centerPlayBtn.style.display = isPlaying ? 'none' : 'flex';
+      if (playIcon) playIcon.style.display = isPlaying ? 'none' : 'block';
+      if (pauseIcon) pauseIcon.style.display = isPlaying ? 'block' : 'none';
+      if (badge) badge.innerText = isPlaying ? 'REPRODUZINDO' : 'PAUSADO';
+    }
 
-      const totalSecs = Math.max(state.recordingSeconds || 15, 10);
-      let elapsed = (playbackProgress / 100) * totalSecs;
+    function closeHtmlVideoPlayer() {
+      const playerContainer = document.getElementById('videoPlayerContainerHtml');
+      const videoEl = document.getElementById('htmlRecordedVideo');
+      if (videoEl) videoEl.pause();
+      if (playerContainer) playerContainer.style.display = 'none';
+    }
 
-      clearInterval(playbackInterval);
-      playbackInterval = setInterval(() => {
-        elapsed += 0.2;
-        playbackProgress = Math.min(100, (elapsed / totalSecs) * 100);
-        const bar = document.getElementById('playbackProgressBar');
-        if (bar) bar.style.width = `${playbackProgress}%`;
-        const timeText = document.getElementById('playbackTimeText');
-        if (timeText) {
-          const cur = String(Math.floor(elapsed)).padStart(2, '0');
-          const tot = String(totalSecs).padStart(2, '0');
-          timeText.innerText = `00:${cur} / 00:${tot}`;
+    function seekHtmlVideo(e) {
+      const videoEl = document.getElementById('htmlRecordedVideo');
+      const track = document.getElementById('htmlVideoProgressBarTrack');
+      if (!videoEl || !track) return;
+      const rect = track.getBoundingClientRect();
+      const pos = (e.clientX - rect.left) / rect.width;
+      videoEl.currentTime = pos * (videoEl.duration || state.recordingSeconds || 15);
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('DOMContentLoaded', () => {
+        const videoEl = document.getElementById('htmlRecordedVideo');
+        if (videoEl) {
+          videoEl.ontimeupdate = () => {
+            const fill = document.getElementById('htmlVideoProgressBarFill');
+            const timeText = document.getElementById('htmlVideoTimeText');
+            const dur = videoEl.duration || state.recordingSeconds || 15;
+            const cur = videoEl.currentTime || 0;
+            if (fill) fill.style.width = `${Math.min(100, (cur / dur) * 100)}%`;
+            if (timeText) {
+              const cStr = String(Math.floor(cur)).padStart(2, '0');
+              const dStr = String(Math.floor(dur)).padStart(2, '0');
+              timeText.innerText = `00:${cStr} / 00:${dStr}`;
+            }
+          };
+          videoEl.onended = () => {
+            updateHtmlVideoState(false);
+          };
         }
-        if (playbackProgress >= 100) {
-          stopPlaybackRecordedTake();
-          playbackProgress = 0;
-          if (bar) bar.style.width = '0%';
-        }
-      }, 200);
+      });
     }
 
     function stopPlaybackRecordedTake() {
-      isPlaybackPlaying = false;
-      clearInterval(playbackInterval);
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-      const playIcon = document.getElementById('playbackPlayIcon');
-      const pauseIcon = document.getElementById('playbackPauseIcon');
-      const statusText = document.getElementById('playbackStatusText');
-      if (playIcon) playIcon.style.display = 'block';
-      if (pauseIcon) pauseIcon.style.display = 'none';
-      if (statusText) statusText.innerHTML = '<span style="width: 6px; height: 6px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 6px var(--color-primary);"></span> Reproduzir Gravação';
+      closeHtmlVideoPlayer();
+      const loadingOverlay = document.getElementById('videoLoadingOverlayHtml');
+      if (loadingOverlay) loadingOverlay.style.display = 'none';
     }
 
     // Botão para reiniciar a gravação: zera o teleprompter, tempo e inicia nova contagem de 5 segundos
@@ -2116,9 +2198,50 @@ Gostou do hack? Inscreva-se e teste seu vídeo com o VibeVio!`;
       }
     }
 
+    function togglePrompterScrolling() {
+      state.isPrompterRunning = !state.isPrompterRunning;
+      if (state.isPrompterRunning) {
+        scheduleNextPrompterStep();
+      } else {
+        clearTimeout(state.prompterTimeout);
+      }
+    }
+
+    function scheduleNextPrompterStep() {
+      clearTimeout(state.prompterTimeout);
+      const shouldRun = state.isRecording || state.isPrompterRunning;
+      if (!shouldRun) return;
+
+      const lines = state.currentScriptLines || [];
+      if (state.prompterLineIndex >= lines.length - 1) {
+        state.isPrompterRunning = false;
+        return;
+      }
+
+      const currentLine = lines[state.prompterLineIndex] || '';
+      const wpm = state.prompterWpm || 100;
+      let delay = 1800;
+
+      if (currentLine === '-') {
+        delay = Math.round((60 / wpm) * 2.5 * 1000);
+      } else {
+        const words = Math.max(1, currentLine.split(/\s+/).filter(Boolean).length);
+        delay = Math.round((words / (wpm / 60)) * 1000);
+      }
+      delay = Math.max(600, delay);
+
+      state.prompterTimeout = setTimeout(() => {
+        if (state.isRecording || state.isPrompterRunning) {
+          state.prompterLineIndex++;
+          renderPrompterLines();
+          scheduleNextPrompterStep();
+        }
+      }, delay);
+    }
+
     function changePrompterSpeed(speedVal) {
       state.prompterWpm = parseInt(speedVal, 10);
-      if (state.isRecording) {
+      if (state.isRecording || state.isPrompterRunning) {
         scheduleNextPrompterStep();
       }
     }
